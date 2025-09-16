@@ -41,8 +41,6 @@ export function AnalysisResults({
         return `NPM account: ${searchQuery}`;
       case "npm-package":
         return `NPM package: ${searchQuery}`;
-      case "npm-repo":
-        return `NPM repository: ${searchQuery}`;
       case "package-json":
         return "Package.json analysis";
       case "file-upload":

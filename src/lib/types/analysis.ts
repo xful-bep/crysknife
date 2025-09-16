@@ -2,7 +2,6 @@ export type SearchType =
   | "github-account"
   | "npm-account"
   | "npm-package"
-  | "npm-repo"
   | "file-upload"
   | "base64-input"
   | "package-json";

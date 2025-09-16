@@ -6,7 +6,6 @@ export const getSearchTypeIcon = (searchType: SearchType) => {
       return "github";
     case "npm-account":
     case "npm-package":
-    case "npm-repo":
       return "package";
     case "file-upload":
       return "upload";
@@ -25,8 +24,6 @@ export const getSearchTypePlaceholder = (searchType: SearchType): string => {
       return "Enter NPM username...";
     case "npm-package":
       return "Enter NPM package name...";
-    case "npm-repo":
-      return "Enter NPM repository name...";
     case "file-upload":
       return "Upload a JSON file...";
     case "base64-input":
@@ -44,8 +41,6 @@ export const getSearchTypeLabel = (searchType: SearchType): string => {
       return "NPM Account";
     case "npm-package":
       return "NPM Package";
-    case "npm-repo":
-      return "NPM Repository";
     case "file-upload":
       return "File Upload";
     case "base64-input":

@@ -38,12 +38,6 @@ export function SearchTypeSelect({ value, onValueChange }: SearchSelectProps) {
             NPM Package
           </div>
         </SelectItem>
-        <SelectItem value="npm-repo">
-          <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            NPM Repository
-          </div>
-        </SelectItem>
       </SelectContent>
     </Select>
   );

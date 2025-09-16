@@ -70,7 +70,6 @@ Choose from the dropdown menu:
 - **GitHub Account**: Analyze a specific GitHub username
 - **NPM Account**: Check NPM user accounts for compromise
 - **NPM Package**: Inspect individual packages for malware
-- **NPM Repository**: Scan repository patterns
 
 Enter the target (username, package name, or repository) and click analyze.
 

@@ -2,11 +2,7 @@ import { CompromisedData } from "@/lib/types/analysis";
 import { analyzeGitHubAccount } from "./github";
 import { analyzeNpmAccount, analyzeNpmPackage } from "./npm";
 
-export type AnalysisType =
-  | "github-account"
-  | "npm-account"
-  | "npm-package"
-  | "npm-repo";
+export type AnalysisType = "github-account" | "npm-account" | "npm-package";
 
 /**
  * Main analysis dispatcher that routes to the appropriate analyzer
@@ -23,10 +19,6 @@ export async function performAnalysis(
       return analyzeNpmAccount(query);
 
     case "npm-package":
-      return analyzeNpmPackage(query);
-
-    case "npm-repo":
-      // For now, treat npm-repo the same as npm-package
       return analyzeNpmPackage(query);
 
     default:
