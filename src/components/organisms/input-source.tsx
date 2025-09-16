@@ -69,7 +69,16 @@ export function InputSource({ onSearch, isLoading }: InputSourceProps) {
 
               <TabsContent value="upload" className="space-y-4 mt-6">
                 <p className="text-sm text-muted-foreground text-center">
-                  Upload a leaked data JSON file to analyze its contents
+                  Upload a leaked data.json file to analyze its contents
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 text-center gap-1">
+                  Usually located at
+                  github.com/your-username/Shai-Hulud/blob/main/data.json
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 text-center flex items-center justify-center gap-1">
+                  <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                  If your leaked data still public anywhere, remove it ASAP and
+                  rotate your keys!
                 </p>
                 <FileUpload
                   onFileSelect={handleFileSelect}
@@ -80,6 +89,11 @@ export function InputSource({ onSearch, isLoading }: InputSourceProps) {
               <TabsContent value="base64" className="space-y-4 mt-6">
                 <p className="text-sm text-muted-foreground text-center">
                   Paste base64 encoded leaked data to decode and analyze
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 text-center flex items-center justify-center gap-1">
+                  <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                  If your leaked data still public anywhere, remove it ASAP and
+                  rotate your keys!
                 </p>
                 <Base64Input
                   onBase64Submit={handleBase64Submit}
