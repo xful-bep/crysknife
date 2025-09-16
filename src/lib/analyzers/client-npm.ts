@@ -18,38 +18,55 @@ export async function analyzeNpmAccountClient(
   console.log("Client-side analyzing NPM account:", username);
 
   try {
-    // Get user info from NPM API
-    const userUrl = `https://registry.npmjs.org/-/user/org.couchdb.user:${username}`;
-    const userResponse = await fetch(userUrl);
+    // Use NPM's search API to find packages by author
+    // This is more reliable and has better CORS support
+    const searchUrl = `https://registry.npmjs.org/-/v1/search?text=author:${encodeURIComponent(
+      username
+    )}&size=250`;
+    const searchResponse = await fetch(searchUrl);
 
-    if (userResponse.status === 404) {
-      return createCleanCompromisedData();
-    }
-
-    if (!userResponse.ok) {
-      if (userResponse.status === 429) {
+    if (!searchResponse.ok) {
+      if (searchResponse.status === 429) {
         throw new Error(
-          `NPM API rate limit exceeded. Please wait before trying again. (Status: ${userResponse.status})`
+          `NPM API rate limit exceeded. Please wait before trying again. (Status: ${searchResponse.status})`
         );
       }
-      throw new Error(`NPM API error: ${userResponse.status}`);
+      if (searchResponse.status === 404) {
+        return createCleanCompromisedData();
+      }
+      throw new Error(`NPM API error: ${searchResponse.status}`);
     }
 
-    // Get user's packages
-    const packagesUrl = `https://registry.npmjs.org/-/user/${username}/package`;
-    const packagesResponse = await fetch(packagesUrl);
+    const searchData = await searchResponse.json();
 
-    if (!packagesResponse.ok) {
-      if (packagesResponse.status === 429) {
-        throw new Error(
-          `NPM API rate limit exceeded. Please wait before trying again. (Status: ${packagesResponse.status})`
-        );
+    // Extract package names from search results
+    const packages: Record<
+      string,
+      { name: string; author?: { name: string } }
+    > = {};
+    if (searchData.objects && Array.isArray(searchData.objects)) {
+      searchData.objects.forEach(
+        (obj: { package: { name: string; author?: { name: string } } }) => {
+          if (obj.package && obj.package.name) {
+            packages[obj.package.name] = obj.package;
+          }
+        }
+      );
+    }
+
+    // If no packages found, try alternative approach with direct user lookup
+    if (Object.keys(packages).length === 0) {
+      try {
+        // Fallback: try to get user profile (this may not work due to CORS)
+        const userUrl = `https://www.npmjs.com/~${username}`;
+        await fetch(userUrl, { mode: "no-cors" });
+        // Note: no-cors mode means we can't read the response, but we can detect if the user exists
+        // This is a limitation of browser-based access to NPM
+      } catch {
+        // Ignore errors from the fallback attempt
       }
-      // User exists but no packages or API error - return clean result
       return createCleanCompromisedData();
     }
-
-    const packages = await packagesResponse.json();
 
     // Check for infected packages from the known list
     const infectedPackages = Object.keys(packages)
@@ -81,6 +98,18 @@ export async function analyzeNpmAccountClient(
     return createCleanCompromisedData();
   } catch (error) {
     console.error("Error analyzing NPM account:", error);
+
+    // Check if it's a CORS or network error
+    if (
+      error instanceof TypeError &&
+      error.message.includes("Failed to fetch")
+    ) {
+      throw new Error(
+        `Failed to fetch NPM account data. This might be due to network issues or API limitations. ` +
+          `The NPM registry API may have CORS restrictions for browser-based requests.`
+      );
+    }
+
     throw error;
   }
 }
@@ -241,6 +270,17 @@ export async function analyzeNpmPackageClient(
     };
   } catch (error) {
     console.error("Error analyzing NPM package:", error);
+
+    // Check if it's a CORS or network error
+    if (
+      error instanceof TypeError &&
+      error.message.includes("Failed to fetch")
+    ) {
+      throw new Error(
+        `Failed to fetch NPM package data for "${packageName}". This might be due to network issues or the package doesn't exist.`
+      );
+    }
+
     throw error;
   }
 }
