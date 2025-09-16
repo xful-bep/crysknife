@@ -2,7 +2,9 @@ export type SearchType =
   | "github-account"
   | "npm-account"
   | "npm-package"
-  | "npm-repo";
+  | "npm-repo"
+  | "file-upload"
+  | "base64-input";
 
 export interface CompromisedData {
   system: {

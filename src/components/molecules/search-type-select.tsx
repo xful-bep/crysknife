@@ -12,21 +12,6 @@ import {
 import { SearchSelectProps } from "@/lib/types";
 
 export function SearchTypeSelect({ value, onValueChange }: SearchSelectProps) {
-  const getIcon = (type: string) => {
-    switch (type) {
-      case "github-account":
-        return <SiGithub className="h-4 w-4" />;
-      case "npm-account":
-        return <Users className="h-4 w-4" />;
-      case "npm-package":
-        return <Package className="h-4 w-4" />;
-      case "npm-repo":
-        return <Globe className="h-4 w-4" />;
-      default:
-        return <Globe className="h-4 w-4" />;
-    }
-  };
-
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className="w-48">

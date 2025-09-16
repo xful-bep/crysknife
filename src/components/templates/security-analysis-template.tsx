@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import {
   HeaderSection,
-  SearchForm,
+  InputSource,
   AnalysisResults,
   InformationSection,
   Footer,
@@ -17,12 +17,16 @@ export function SecurityAnalysisTemplate() {
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<CompromisedData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [currentSearchType, setCurrentSearchType] = useState<SearchType | null>(
+    null
+  );
   const [currentSearchQuery, setCurrentSearchQuery] = useState("");
 
   const handleSearch = async (type: SearchType, query: string) => {
     setIsLoading(true);
     setError(null);
     setResults(null);
+    setCurrentSearchType(type);
     setCurrentSearchQuery(query);
 
     try {
@@ -52,7 +56,7 @@ export function SecurityAnalysisTemplate() {
         <div className="container mx-auto px-4 py-16">
           <HeaderSection />
 
-          <SearchForm onSearch={handleSearch} isLoading={isLoading} />
+          <InputSource onSearch={handleSearch} isLoading={isLoading} />
 
           {error && (
             <div className="max-w-2xl mx-auto mb-8">
@@ -66,6 +70,7 @@ export function SecurityAnalysisTemplate() {
           {results && (
             <AnalysisResults
               results={results}
+              searchType={currentSearchType}
               searchQuery={currentSearchQuery}
             />
           )}

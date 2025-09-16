@@ -1,5 +1,5 @@
 export { HeaderSection } from "./header-section";
-export { SearchForm } from "./search-form";
+export { InputSource } from "./input-source";
 export { AnalysisResults } from "./analysis-results";
 export { ModuleAnalysis } from "./module-analysis";
 export { InformationSection } from "./information-section";

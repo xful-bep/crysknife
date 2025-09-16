@@ -11,7 +11,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SystemInfoCard } from "@/components/molecules";
 import { ModuleAnalysis } from "./module-analysis";
-import { CompromisedData } from "@/lib/types";
+import { CompromisedData, SearchType } from "@/lib/types";
 import {
   isSystemCompromised,
   getSecurityRecommendations,
@@ -20,15 +20,37 @@ import { cn } from "@/lib/utils";
 
 interface AnalysisResultsProps {
   results: CompromisedData;
+  searchType: SearchType | null;
   searchQuery: string;
 }
 
 export function AnalysisResults({
   results,
+  searchType,
   searchQuery,
 }: AnalysisResultsProps) {
   const isCompromised = isSystemCompromised(results);
   const recommendations = getSecurityRecommendations(results);
+
+  // Generate display text based on search type
+  const getDisplayText = () => {
+    switch (searchType) {
+      case "github-account":
+        return `GitHub account: ${searchQuery}`;
+      case "npm-account":
+        return `NPM account: ${searchQuery}`;
+      case "npm-package":
+        return `NPM package: ${searchQuery}`;
+      case "npm-repo":
+        return `NPM repository: ${searchQuery}`;
+      case "file-upload":
+        return "Uploaded JSON file";
+      case "base64-input":
+        return "Decoded base64 data";
+      default:
+        return searchQuery;
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -60,7 +82,7 @@ export function AnalysisResults({
                 <CardDescription>
                   Analysis results for:{" "}
                   <code className="bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
-                    {searchQuery}
+                    {getDisplayText()}
                   </code>
                 </CardDescription>
               </div>

@@ -21,6 +21,8 @@ Shai-Hulud is a sophisticated malware that targets development environments, spe
 - **GitHub Account Analysis**: Scans for Shai-Hulud repositories and malicious data patterns
 - **NPM Account Scanning**: Identifies compromised NPM accounts and malicious packages
 - **Package Analysis**: Deep inspection of NPM packages for malware signatures
+- **File Upload Analysis**: Direct analysis of leaked JSON data files
+- **Base64 Decode Analysis**: Recursive base64 decoding and analysis of pasted data
 - **Token Detection**: Identifies and safely displays stolen authentication tokens
 
 ### Security Features
@@ -33,6 +35,8 @@ Shai-Hulud is a sophisticated malware that targets development environments, spe
 ### User Experience
 
 - **Modern UI**: Built with Next.js 15, Tailwind CSS, and shadcn/ui
+- **Tabbed Interface**: Organized analysis methods with clean tab navigation
+- **Multiple Input Methods**: Search, file upload, and base64 paste options
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Dark Mode Support**: Full dark theme compatibility
 - **Intuitive Interface**: Clean, security-focused design
@@ -47,27 +51,36 @@ Shai-Hulud is a sophisticated malware that targets development environments, spe
 
 ## 📖 How to Use
 
-### 1. Select Analysis Type
+### Analysis Methods
 
+Crysknife offers three different analysis methods through a tabbed interface:
+
+#### 1. Search Tab
 Choose from the dropdown menu:
-
 - **GitHub Account**: Analyze a specific GitHub username
 - **NPM Account**: Check NPM user accounts for compromise
 - **NPM Package**: Inspect individual packages for malware
 - **NPM Repository**: Scan repository patterns
 
-### 2. Enter Target
+Enter the target (username, package name, or repository) and click analyze.
 
-Type the username, package name, or repository to analyze.
+#### 2. Upload File Tab
+- **Direct File Analysis**: Upload JSON files containing leaked data
+- **Drag & Drop Support**: Simply drag a `.json` file to the upload area
+- **Instant Analysis**: Immediate processing of uploaded malware data
+- **File Validation**: Automatic validation of file format and structure
 
-### 3. Run Analysis
-
-Click the search button to start the security scan.
+#### 3. Paste Data Tab
+- **Base64 Input**: Paste base64-encoded stolen data directly
+- **Recursive Decoding**: Automatic handling of nested base64 encoding
+- **Real-time Validation**: Input validation without premature error messages
+- **Flexible Input**: Handles various base64 formats and encoding levels
 
 ### 4. Review Results
 
 - **Green**: No threats detected
 - **Red**: Compromise detected with detailed information
+- **Context-Aware Display**: Results show appropriate labels based on analysis method
 
 ## 🔍 Detection Methods
 
@@ -92,14 +105,42 @@ Click the search button to start the security scan.
 - Finds AWS and GCP service credentials
 - Safely displays found tokens with masking
 
+### File and Data Analysis
+
+- **Direct JSON Processing**: Analyzes uploaded malware data files
+- **Recursive Base64 Decoding**: Handles multiple layers of base64 encoding
+- **Browser-Based Processing**: Client-side analysis for security and privacy
+- **Flexible Input Handling**: Supports various data formats and encoding methods
+
 ## 🛠️ Technology Stack
 
 - **Framework**: Next.js 15 with App Router
 - **Styling**: Tailwind CSS + shadcn/ui components
+- **UI Components**: Radix UI primitives with custom styling
 - **Icons**: Lucide React
 - **Type Safety**: TypeScript
 - **API Integration**: GitHub REST API, NPM Registry API
 - **State Management**: React Hooks
+- **Architecture**: Atomic Design Pattern (Atoms, Molecules, Organisms, Templates)
+
+## 🏗️ Project Architecture
+
+Crysknife follows the Atomic Design methodology for a scalable and maintainable component structure:
+
+### Component Hierarchy
+
+- **Atoms**: Basic building blocks (SearchButton, StatusBadge, Logo)
+- **Molecules**: Simple component groups (SearchInput, FileUpload, Base64Input, SearchForm)
+- **Organisms**: Complex component sections (InputSource, AnalysisResults, HeaderSection)
+- **Templates**: Page-level layout components (SecurityAnalysisTemplate)
+
+### Key Components
+
+- **InputSource**: Main organism containing tabbed interface for all analysis methods
+- **SearchForm**: Molecule for traditional search-based analysis
+- **FileUpload**: Molecule for drag-and-drop JSON file analysis
+- **Base64Input**: Molecule for pasted base64 data analysis
+- **AnalysisResults**: Organism displaying security analysis results with context-aware labeling
 
 ## 🔒 Security Considerations
 
@@ -108,6 +149,14 @@ Click the search button to start the security scan.
 - Tokens are masked by default
 - No tokens are stored or transmitted to external services
 - All analysis happens client-side when possible
+- File uploads processed locally in browser
+
+### Data Privacy
+
+- **Local Processing**: File and base64 analysis performed entirely in browser
+- **No Server Storage**: Uploaded files and pasted data never leave your device
+- **Client-Side Decoding**: Base64 decoding happens locally for maximum privacy
+- **Secure Analysis**: No sensitive data transmitted to external services
 
 ### API Usage
 
