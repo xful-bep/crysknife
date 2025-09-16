@@ -3,6 +3,10 @@
 import { CompromisedData, SearchType } from "@/lib/types/analysis";
 import { analyzeGitHubAccountClient } from "./client-github";
 import { analyzeNpmAccountClient, analyzeNpmPackageClient } from "./client-npm";
+import {
+  analyzeEnvironmentData,
+  analyzePackageJson,
+} from "./client-environment";
 
 /**
  * Client-side recursive base64 decode function
@@ -98,14 +102,13 @@ export async function analyzeDataContent(
     // Parse the JSON content directly (for file uploads)
     const data = JSON.parse(content);
 
-    // Validate that it looks like compromised data
-    if (!data.system || !data.environment) {
-      throw new Error(
-        "Invalid data format: missing required fields (system, environment)"
-      );
+    // Check if it's a package.json file
+    if (data.dependencies || data.devDependencies || data.name) {
+      return await analyzePackageJson(content);
     }
 
-    return data as CompromisedData;
+    // Otherwise, analyze as environment data
+    return await analyzeEnvironmentData(data);
   } catch (error) {
     if (error instanceof SyntaxError) {
       throw new Error("Invalid JSON format in the provided data");
@@ -135,14 +138,10 @@ export async function analyzeBase64Content(
       );
     }
 
-    // Validate that it looks like compromised data
-    if (!decoded.system || (!decoded.environment && !decoded.modules)) {
-      throw new Error(
-        "Invalid data format: missing required fields (system and environment/modules)"
-      );
-    }
-
-    return decoded;
+    // Use the environment analyzer to check for infected packages
+    return await analyzeEnvironmentData(
+      decoded as unknown as Record<string, unknown>
+    );
   } catch (error) {
     if (error instanceof Error) {
       throw error;
@@ -183,6 +182,10 @@ export async function performClientAnalysis(
 
       case "base64-input":
         result = await analyzeBase64Content(query);
+        break;
+
+      case "package-json":
+        result = await analyzePackageJson(query);
         break;
 
       default:

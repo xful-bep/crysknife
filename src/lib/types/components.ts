@@ -52,6 +52,17 @@ export interface ModuleAnalysisProps {
     npm?: {
       authenticated: boolean;
       username: string | null;
+      suspiciousPackages?: string[];
+      packageName?: string;
+      suspicious?: boolean;
+      suspiciousReasons?: string[];
+      infectedPackages?: {
+        name: string;
+        versions: string[];
+        detectedVersion?: string;
+        category: string;
+      }[];
+      malwareIndicators?: string[];
     };
   };
 }

@@ -1,5 +1,11 @@
 import { CompromisedData } from "@/lib/types/analysis";
 import { createCleanCompromisedData } from "@/lib/utils/analysis";
+import {
+  INFECTED_PACKAGE_NAMES,
+  isPackageInfected,
+  INFECTED_PACKAGE_MAP,
+  MALWARE_INDICATORS,
+} from "@/lib/data/infected-packages";
 
 /**
  * Analyzes an NPM account for malicious packages
@@ -29,26 +35,27 @@ export async function analyzeNpmAccount(
     if (packagesResponse.ok) {
       const packages = await packagesResponse.json();
 
-      // Look for suspicious package names or patterns
-      const suspiciousPatterns = [
-        "shai-hulud",
-        "malware",
-        "stealer",
-        "token-grab",
-      ];
-      const hasSuspiciousPackages = Object.keys(packages).some((pkg) =>
-        suspiciousPatterns.some((pattern) =>
-          pkg.toLowerCase().includes(pattern)
-        )
+      // Check for infected packages from the known list
+      const infectedPackages = Object.keys(packages).filter((pkg) =>
+        INFECTED_PACKAGE_NAMES.has(pkg)
       );
 
-      if (hasSuspiciousPackages) {
+      if (infectedPackages.length > 0) {
         return {
           ...createCleanCompromisedData(),
           modules: {
             npm: {
               authenticated: true,
               username: username,
+              suspiciousPackages: infectedPackages,
+              infectedPackages: infectedPackages.map((pkg) => {
+                const infectedPkg = INFECTED_PACKAGE_MAP.get(pkg);
+                return {
+                  name: pkg,
+                  versions: infectedPkg?.versions || [],
+                  category: infectedPkg?.category || "unknown",
+                };
+              }),
             },
           },
         };
@@ -79,7 +86,65 @@ export async function analyzeNpmPackage(
   console.log("Analyzing NPM package:", packageName);
 
   try {
-    const packageUrl = `https://registry.npmjs.org/${packageName}`;
+    // Parse package name and version if provided
+    let packageNameToCheck = packageName;
+    let versionToCheck: string | undefined;
+
+    // Handle package@version format
+    if (packageName.includes("@") && !packageName.startsWith("@")) {
+      const parts = packageName.split("@");
+      packageNameToCheck = parts[0];
+      versionToCheck = parts[1];
+    } else if (
+      packageName.startsWith("@") &&
+      packageName.lastIndexOf("@") > 0
+    ) {
+      // Handle scoped packages like @ctrl/package@version
+      const lastAtIndex = packageName.lastIndexOf("@");
+      packageNameToCheck = packageName.substring(0, lastAtIndex);
+      versionToCheck = packageName.substring(lastAtIndex + 1);
+    }
+
+    // Check if it's an infected package first
+    const infectionCheck = isPackageInfected(
+      packageNameToCheck,
+      versionToCheck
+    );
+
+    if (infectionCheck.infected) {
+      const infectedPkg = INFECTED_PACKAGE_MAP.get(packageNameToCheck);
+      return {
+        system: {
+          platform: "npm",
+          architecture: "unknown",
+          platformDetailed: "npm-package",
+          architectureDetailed: "unknown",
+        },
+        environment: {},
+        modules: {
+          npm: {
+            authenticated: false,
+            username: null,
+            packageName: packageName,
+            suspicious: true,
+            suspiciousReasons: [
+              `This package is part of a known security incident`,
+            ],
+            infectedPackages: [
+              {
+                name: packageNameToCheck,
+                versions: infectionCheck.infectedVersions || [],
+                detectedVersion: versionToCheck,
+                category: infectedPkg?.category || "unknown",
+              },
+            ],
+          },
+        },
+      };
+    }
+
+    // Use the package name without version for the API call
+    const packageUrl = `https://registry.npmjs.org/${packageNameToCheck}`;
     const packageResponse = await fetch(packageUrl);
 
     if (packageResponse.status === 404) {
@@ -92,29 +157,30 @@ export async function analyzeNpmPackage(
 
     const packageData = await packageResponse.json();
 
-    // Check for malicious patterns
+    // Check for malware indicators from the infected packages data
     const description = packageData.description?.toLowerCase() || "";
     const readme = packageData.readme?.toLowerCase() || "";
     const keywords = packageData.keywords?.join(" ").toLowerCase() || "";
 
-    const maliciousPatterns = [
-      "shai-hulud",
-      "token stealer",
-      "credential harvest",
-      "github token",
-      "npm token",
-      "steal",
-      "malware",
-    ];
+    const searchText = `${description} ${readme} ${keywords}`;
+    const foundIndicators: string[] = [];
 
-    const hasMatches = maliciousPatterns.some(
-      (pattern) =>
-        description.includes(pattern) ||
-        readme.includes(pattern) ||
-        keywords.includes(pattern)
-    );
+    // Check for bundle hash
+    if (searchText.includes(MALWARE_INDICATORS.bundleHash)) {
+      foundIndicators.push("Malicious bundle.js hash detected");
+    }
 
-    if (hasMatches || packageName.toLowerCase().includes("shai-hulud")) {
+    // Check for webhook endpoint
+    if (searchText.includes(MALWARE_INDICATORS.webhookEndpoint)) {
+      foundIndicators.push("Data exfiltration endpoint detected");
+    }
+
+    // Check for lifecycle script
+    if (searchText.includes(MALWARE_INDICATORS.lifecycleScript)) {
+      foundIndicators.push("Malicious lifecycle script detected");
+    }
+
+    if (foundIndicators.length > 0) {
       return {
         system: {
           platform: "npm",
@@ -125,8 +191,12 @@ export async function analyzeNpmPackage(
         environment: {},
         modules: {
           npm: {
-            authenticated: true,
-            username: packageData.author?.name || "unknown",
+            authenticated: false,
+            username: packageData.author?.name || null,
+            packageName: packageName,
+            suspicious: true,
+            suspiciousReasons: foundIndicators,
+            malwareIndicators: foundIndicators,
           },
         },
       };

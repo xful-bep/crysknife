@@ -21,7 +21,17 @@ export function InputSource({ onSearch, isLoading }: InputSourceProps) {
   const [activeTab, setActiveTab] = useState("search");
 
   const handleFileSelect = (content: string) => {
-    onSearch("file-upload", content);
+    // Detecta se é um package.json
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed.dependencies || parsed.devDependencies || parsed.name) {
+        onSearch("package-json", content);
+      } else {
+        onSearch("file-upload", content);
+      }
+    } catch {
+      onSearch("file-upload", content);
+    }
   };
 
   const handleBase64Submit = (content: string) => {
@@ -46,10 +56,11 @@ export function InputSource({ onSearch, isLoading }: InputSourceProps) {
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="search">Search</TabsTrigger>
                 <TabsTrigger value="upload">Upload File</TabsTrigger>
                 <TabsTrigger value="base64">Paste Data</TabsTrigger>
+                <TabsTrigger value="package">Package.json</TabsTrigger>
               </TabsList>
 
               <TabsContent value="search" className="mt-6">
@@ -72,6 +83,17 @@ export function InputSource({ onSearch, isLoading }: InputSourceProps) {
                 </p>
                 <Base64Input
                   onBase64Submit={handleBase64Submit}
+                  disabled={isLoading}
+                />
+              </TabsContent>
+
+              <TabsContent value="package" className="space-y-4 mt-6">
+                <p className="text-sm text-muted-foreground text-center">
+                  Upload your package.json content to check for infected
+                  dependencies
+                </p>
+                <FileUpload
+                  onFileSelect={(content) => onSearch("package-json", content)}
                   disabled={isLoading}
                 />
               </TabsContent>

@@ -4,7 +4,8 @@ export type SearchType =
   | "npm-package"
   | "npm-repo"
   | "file-upload"
-  | "base64-input";
+  | "base64-input"
+  | "package-json";
 
 export interface CompromisedData {
   system: {
@@ -47,6 +48,13 @@ export interface CompromisedData {
       packageName?: string;
       suspicious?: boolean;
       suspiciousReasons?: string[];
+      infectedPackages?: {
+        name: string;
+        versions: string[];
+        detectedVersion?: string;
+        category: string;
+      }[];
+      malwareIndicators?: string[];
     };
   };
 }
