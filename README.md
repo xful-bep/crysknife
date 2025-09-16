@@ -2,7 +2,8 @@
 
 A sophisticated security analysis tool designed to detect and analyze Shai-Hulud malware infections across GitHub and NPM ecosystems. Named after the weapon forged from a sandworm's tooth in Dune, Crysknife is built to fight the Shai-Hulud malware threat.
 
-<img width="867" height="577" alt="image" src="https://github.com/user-attachments/assets/e87215c2-71af-4bb6-9933-ec6face80443" />
+<img width="775" height="951" alt="image" src="https://github.com/user-attachments/assets/249103af-78e5-4b0e-b1b2-6f6526033e38" />
+
 
 ## 🚨 What is Shai-Hulud Malware?
 
