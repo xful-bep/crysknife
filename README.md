@@ -4,7 +4,6 @@ A sophisticated security analysis tool designed to detect and analyze Shai-Hulud
 
 <img width="867" height="577" alt="image" src="https://github.com/user-attachments/assets/e87215c2-71af-4bb6-9933-ec6face80443" />
 
-
 ## 🚨 What is Shai-Hulud Malware?
 
 Shai-Hulud is a sophisticated malware that targets development environments, specifically:
@@ -57,7 +56,9 @@ Shai-Hulud is a sophisticated malware that targets development environments, spe
 Crysknife offers three different analysis methods through a tabbed interface:
 
 #### 1. Search Tab
+
 Choose from the dropdown menu:
+
 - **GitHub Account**: Analyze a specific GitHub username
 - **NPM Account**: Check NPM user accounts for compromise
 - **NPM Package**: Inspect individual packages for malware
@@ -66,12 +67,14 @@ Choose from the dropdown menu:
 Enter the target (username, package name, or repository) and click analyze.
 
 #### 2. Upload File Tab
+
 - **Direct File Analysis**: Upload JSON files containing leaked data
 - **Drag & Drop Support**: Simply drag a `.json` file to the upload area
 - **Instant Analysis**: Immediate processing of uploaded malware data
 - **File Validation**: Automatic validation of file format and structure
 
 #### 3. Paste Data Tab
+
 - **Base64 Input**: Paste base64-encoded stolen data directly
 - **Recursive Decoding**: Automatic handling of nested base64 encoding
 - **Real-time Validation**: Input validation without premature error messages
