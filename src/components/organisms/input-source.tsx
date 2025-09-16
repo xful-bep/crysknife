@@ -99,6 +99,15 @@ export function InputSource({ onSearch, isLoading }: InputSourceProps) {
               </TabsContent>
             </Tabs>
           </CardContent>
+
+          {/* Privacy Notice */}
+          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <p className="text-xs text-slate-500 dark:text-slate-400 text-center flex items-center justify-center gap-1">
+              <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+              All analysis runs locally on your machine. No data is shared or
+              uploaded to any server.
+            </p>
+          </div>
         </Card>
       </div>
     </div>
