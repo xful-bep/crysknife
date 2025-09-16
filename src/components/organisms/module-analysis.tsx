@@ -15,7 +15,7 @@ interface InfectedPackage {
   category: string;
 }
 
-export function ModuleAnalysis({ modules }: ModuleAnalysisProps) {
+export function ModuleAnalysis({ modules, searchType }: ModuleAnalysisProps) {
   return (
     <div>
       <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -87,11 +87,14 @@ export function ModuleAnalysis({ modules }: ModuleAnalysisProps) {
                   <AlertDescription>
                     <div className="space-y-2">
                       <div className="font-semibold">
-                        🚨 INFECTED PACKAGES DETECTED
+                        {searchType === "npm-account"
+                          ? "⚠️ COMPROMISED PACKAGES FOUND IN ACCOUNT HISTORY"
+                          : "🚨 INFECTED PACKAGES DETECTED"}
                       </div>
                       <div className="text-sm">
-                        The following packages are part of a known security
-                        incident:
+                        {searchType === "npm-account"
+                          ? "The following packages associated with this account were part of a known security incident:"
+                          : "The following packages are part of a known security incident:"}
                       </div>
                       <div className="grid gap-2">
                         {modules.npm.infectedPackages.map(
@@ -122,9 +125,75 @@ export function ModuleAnalysis({ modules }: ModuleAnalysisProps) {
                         )}
                       </div>
                       <div className="text-xs text-red-600 dark:text-red-400 mt-2">
-                        <strong>Action Required:</strong> These packages contain
-                        malicious code. Remove them immediately and check for
-                        data exfiltration.
+                        {searchType === "npm-account" ? (
+                          <>
+                            <strong>Historical Security Incident:</strong> These
+                            packages were identified as part of a security
+                            incident. If you have used or installed any of these
+                            packages, review your systems for potential
+                            compromise and consider rotating credentials.
+                          </>
+                        ) : (
+                          <>
+                            <strong>Action Required:</strong> These packages
+                            contain malicious code. Remove them immediately and
+                            check for data exfiltration.
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+            {/* Suspicious Packages for NPM Account (non-infected) */}
+            {searchType === "npm-account" &&
+              modules.npm.suspicious &&
+              modules.npm.suspiciousPackages &&
+              modules.npm.suspiciousPackages.length > 0 &&
+              (!modules.npm.infectedPackages ||
+                modules.npm.infectedPackages.length === 0) && (
+                <Alert
+                  variant="default"
+                  className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20"
+                >
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <AlertDescription>
+                    <div className="space-y-2">
+                      <div className="font-semibold text-yellow-800 dark:text-yellow-200">
+                        ⚠️ PACKAGES FOUND FOR REVIEW
+                      </div>
+                      <div className="text-sm text-yellow-700 dark:text-yellow-300">
+                        Found {modules.npm.suspiciousPackages.length} packages
+                        associated with this account. These should be reviewed
+                        for legitimacy:
+                      </div>
+                      <div className="grid gap-2">
+                        {modules.npm.suspiciousPackages
+                          .slice(0, 10)
+                          .map((pkg: string, index: number) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-2 p-2 bg-yellow-100 dark:bg-yellow-800/20 rounded border border-yellow-200 dark:border-yellow-700"
+                            >
+                              <Package className="h-4 w-4 text-yellow-600" />
+                              <code className="text-sm font-mono text-yellow-800 dark:text-yellow-200">
+                                {pkg}
+                              </code>
+                            </div>
+                          ))}
+                        {modules.npm.suspiciousPackages.length > 10 && (
+                          <div className="text-xs text-yellow-600 dark:text-yellow-400">
+                            ... and {modules.npm.suspiciousPackages.length - 10}{" "}
+                            more packages
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
+                        <strong>Recommendation:</strong> Review these packages
+                        to ensure they are legitimate and published by the
+                        account owner. Be cautious of any packages that seem
+                        suspicious or unrelated to the user&apos;s known work.
                       </div>
                     </div>
                   </AlertDescription>

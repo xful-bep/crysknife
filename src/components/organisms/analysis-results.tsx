@@ -78,7 +78,9 @@ export function AnalysisResults({
                   })}
                 >
                   {isCompromised
-                    ? "⚠️ COMPROMISED DETECTED"
+                    ? searchType === "npm-account"
+                      ? "⚠️ POSSIBLY COMPROMISED"
+                      : "⚠️ COMPROMISED DETECTED"
                     : "✅ No Threats Found"}
                 </CardTitle>
                 <CardDescription>
@@ -96,7 +98,7 @@ export function AnalysisResults({
           <SystemInfoCard system={results.system} />
 
           {/* Compromised Modules */}
-          <ModuleAnalysis modules={results.modules} />
+          <ModuleAnalysis modules={results.modules} searchType={searchType} />
 
           {/* Recommendations */}
           {isCompromised && recommendations.length > 0 && (

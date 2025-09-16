@@ -80,6 +80,9 @@ export async function analyzeNpmAccountClient(
         };
       });
 
+    // Get all packages found through search for potential review
+    const allFoundPackages = Object.keys(packages);
+
     if (infectedPackages.length > 0) {
       console.warn(`Infected NPM packages found:`, infectedPackages);
       return {
@@ -90,6 +93,25 @@ export async function analyzeNpmAccountClient(
             username: username,
             suspiciousPackages: infectedPackages.map((pkg) => pkg.name),
             infectedPackages: infectedPackages,
+          },
+        },
+      };
+    }
+
+    // If no infected packages but packages were found, show as potentially concerning for account searches
+    if (allFoundPackages.length > 0) {
+      return {
+        ...createCleanCompromisedData(),
+        modules: {
+          npm: {
+            authenticated: true,
+            username: username,
+            suspiciousPackages: allFoundPackages,
+            packageName: undefined,
+            suspicious: true,
+            suspiciousReasons: [
+              `Found ${allFoundPackages.length} packages associated with this account. These should be reviewed for potential security concerns.`,
+            ],
           },
         },
       };

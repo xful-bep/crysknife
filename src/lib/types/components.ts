@@ -1,3 +1,5 @@
+import { SearchType } from "./analysis";
+
 export interface TokenDisplayProps {
   token: string;
   type: string;
@@ -65,4 +67,5 @@ export interface ModuleAnalysisProps {
       malwareIndicators?: string[];
     };
   };
+  searchType?: SearchType | null;
 }
