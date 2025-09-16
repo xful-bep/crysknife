@@ -16,6 +16,10 @@ interface InfectedPackage {
 }
 
 export function ModuleAnalysis({ modules, searchType }: ModuleAnalysisProps) {
+  if (!modules || Object.values(modules).every((v) => v == void 0)) {
+    return null;
+  }
+
   return (
     <div>
       <h3 className="font-semibold mb-3 flex items-center gap-2">
