@@ -46,12 +46,64 @@ export async function analyzeNpmAccountClient(
     > = {};
     if (searchData.objects && Array.isArray(searchData.objects)) {
       searchData.objects.forEach(
-        (obj: { package: { name: string; author?: { name: string } } }) => {
+        (obj: {
+          package: {
+            name: string;
+            author?: { name: string };
+            maintainers?: Array<{ name: string }>;
+          };
+        }) => {
           if (obj.package && obj.package.name) {
             packages[obj.package.name] = obj.package;
           }
         }
       );
+    }
+
+    // If no packages found with author search, try a broader search with maintainer field
+    if (Object.keys(packages).length === 0) {
+      console.log(
+        `No packages found with author:${username}, trying broader search...`
+      );
+
+      // Try searching with text containing the username
+      const broaderSearchUrl = `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(
+        username
+      )}&size=250`;
+
+      try {
+        const broaderResponse = await fetch(broaderSearchUrl);
+        if (broaderResponse.ok) {
+          const broaderData = await broaderResponse.json();
+          if (broaderData.objects && Array.isArray(broaderData.objects)) {
+            broaderData.objects.forEach(
+              (obj: {
+                package: {
+                  name: string;
+                  author?: { name: string };
+                  maintainers?: Array<{ name: string }>;
+                };
+              }) => {
+                if (obj.package && obj.package.name) {
+                  // Check if username matches author or maintainers
+                  const authorMatch =
+                    obj.package.author?.name?.toLowerCase() ===
+                    username.toLowerCase();
+                  const maintainerMatch = obj.package.maintainers?.some(
+                    (m) => m.name?.toLowerCase() === username.toLowerCase()
+                  );
+
+                  if (authorMatch || maintainerMatch) {
+                    packages[obj.package.name] = obj.package;
+                  }
+                }
+              }
+            );
+          }
+        }
+      } catch (error) {
+        console.log("Broader search failed:", error);
+      }
     }
 
     // If no packages found, try alternative approach with direct user lookup
@@ -69,8 +121,23 @@ export async function analyzeNpmAccountClient(
     }
 
     // Check for infected packages from the known list
-    const infectedPackages = Object.keys(packages)
-      .filter((pkg) => INFECTED_PACKAGE_NAMES.has(pkg))
+    const allFoundPackages = Object.keys(packages);
+    console.log(
+      `Found ${allFoundPackages.length} packages for user ${username}:`,
+      allFoundPackages
+    );
+    console.log(
+      `Checking against ${INFECTED_PACKAGE_NAMES.size} known infected packages`
+    );
+
+    const infectedPackages = allFoundPackages
+      .filter((pkg) => {
+        const isInfected = INFECTED_PACKAGE_NAMES.has(pkg);
+        if (isInfected) {
+          console.log(`🚨 INFECTED PACKAGE DETECTED: ${pkg}`);
+        }
+        return isInfected;
+      })
       .map((pkg) => {
         const infectedPkg = INFECTED_PACKAGE_MAP.get(pkg);
         return {
@@ -80,26 +147,141 @@ export async function analyzeNpmAccountClient(
         };
       });
 
-    // Get all packages found through search for potential review
-    const allFoundPackages = Object.keys(packages);
+    console.log(
+      `Found ${infectedPackages.length} infected packages:`,
+      infectedPackages
+    );
 
-    if (infectedPackages.length > 0) {
-      console.warn(`Infected NPM packages found:`, infectedPackages);
+    // Additional check: Search for any infected packages that might be associated with this username
+    // by checking each infected package directly via NPM API
+    const additionalInfectedPackages: typeof infectedPackages = [];
+
+    // If we found packages but none were infected, or if we found no packages at all,
+    // do a direct check on known infected packages
+    if (allFoundPackages.length === 0 || infectedPackages.length === 0) {
+      console.log(
+        `Performing direct check on known infected packages for user ${username}...`
+      );
+
+      // Get popular infected packages first (most likely to be tested)
+      const priorityInfectedPackages = [
+        "angulartics2",
+        "ngx-bootstrap",
+        "ngx-toastr",
+        "ng2-file-upload",
+        "@ctrl/ngx-codemirror",
+        "@ctrl/ngx-csv",
+        "@ctrl/react-adsense",
+        "express-fileupload",
+        "node-red-contrib-mqtt-broker",
+      ].filter((pkg) => INFECTED_PACKAGE_NAMES.has(pkg));
+
+      // Check priority packages first, then sample from remaining
+      const sampleInfectedPackages = [
+        ...priorityInfectedPackages,
+        ...Array.from(INFECTED_PACKAGE_NAMES)
+          .filter((pkg) => !priorityInfectedPackages.includes(pkg))
+          .slice(0, 15),
+      ];
+
+      for (const packageName of sampleInfectedPackages) {
+        try {
+          const packageUrl = `https://registry.npmjs.org/${encodeURIComponent(
+            packageName
+          )}`;
+          const packageResponse = await fetch(packageUrl);
+
+          if (packageResponse.ok) {
+            const packageData = await packageResponse.json();
+
+            // Check if this user is the author or maintainer
+            const authorName = packageData.author?.name || packageData.author;
+            const isAuthor =
+              typeof authorName === "string" &&
+              authorName.toLowerCase() === username.toLowerCase();
+
+            const isMaintainer = packageData.maintainers?.some(
+              (m: { name: string } | string) => {
+                const maintainerName = typeof m === "string" ? m : m.name;
+                return maintainerName?.toLowerCase() === username.toLowerCase();
+              }
+            );
+
+            if (isAuthor || isMaintainer) {
+              console.log(
+                `🚨 DIRECT INFECTED PACKAGE MATCH: ${packageName} is associated with user ${username}`
+              );
+              console.log(`- Author: ${authorName}, Is Author: ${isAuthor}`);
+              console.log(
+                `- Maintainers: ${JSON.stringify(
+                  packageData.maintainers
+                )}, Is Maintainer: ${isMaintainer}`
+              );
+
+              const infectedPkg = INFECTED_PACKAGE_MAP.get(packageName);
+              additionalInfectedPackages.push({
+                name: packageName,
+                versions: infectedPkg?.versions || [],
+                category: infectedPkg?.category || "unknown",
+              });
+
+              // Also add this package to the found packages list if it wasn't already there
+              if (!packages[packageName]) {
+                packages[packageName] = {
+                  name: packageName,
+                  author: { name: authorName },
+                };
+                allFoundPackages.push(packageName);
+              }
+            }
+          }
+        } catch (error) {
+          console.log(`Failed to check package ${packageName}:`, error);
+          // Continue checking other packages
+        }
+      }
+    }
+
+    // Combine both infected package lists
+    const allInfectedPackages = [
+      ...infectedPackages,
+      ...additionalInfectedPackages,
+    ];
+
+    if (allInfectedPackages.length > 0) {
+      console.warn(
+        `🚨 SECURITY ALERT: Infected NPM packages found for user ${username}:`,
+        allInfectedPackages
+      );
       return {
         ...createCleanCompromisedData(),
         modules: {
           npm: {
             authenticated: true,
             username: username,
-            suspiciousPackages: infectedPackages.map((pkg) => pkg.name),
-            infectedPackages: infectedPackages,
+            suspiciousPackages: allFoundPackages, // All packages by the user
+            infectedPackages: allInfectedPackages, // Only the infected ones
+            suspicious: true,
+            suspiciousReasons: [
+              `⚠️ SECURITY ALERT: This account has published packages with compromised versions in their history.`,
+              `${allInfectedPackages.length} package(s) have been identified with security incidents.`,
+              `Review all packages from this account for potential security risks.`,
+            ],
           },
         },
       };
     }
 
+    console.log(`Total packages found: ${allFoundPackages.length}`);
+    console.log(
+      `Total infected packages detected: ${allInfectedPackages.length}`
+    );
+
     // If no infected packages but packages were found, show as potentially concerning for account searches
     if (allFoundPackages.length > 0) {
+      console.log(
+        `No infected packages found, but ${allFoundPackages.length} packages are associated with user ${username}`
+      );
       return {
         ...createCleanCompromisedData(),
         modules: {
@@ -116,6 +298,8 @@ export async function analyzeNpmAccountClient(
         },
       };
     }
+
+    console.log(`No packages found for user ${username}`);
 
     return createCleanCompromisedData();
   } catch (error) {
@@ -192,6 +376,7 @@ export async function analyzeNpmPackageClient(
               authenticated: false,
               username: null,
               packageName: packageName,
+              detectedVersion: versionToCheck,
               suspicious: true,
               suspiciousReasons: [
                 `This package is part of a known security incident`,
@@ -255,6 +440,7 @@ export async function analyzeNpmPackageClient(
             authenticated: false,
             username: null,
             packageName: packageName,
+            detectedVersion: latestVersion,
             suspicious: true,
             suspiciousReasons: [
               `This package is part of a known security incident (version ${latestVersion})`,
@@ -289,6 +475,7 @@ export async function analyzeNpmPackageClient(
             authenticated: false,
             username: null,
             packageName: packageName,
+            detectedVersion: latestVersion, // Include the detected version
             suspicious: true,
             suspiciousReasons: [
               `⚠️ This package has compromised versions in its history: ${anyVersionCheck.infectedVersions?.join(
@@ -300,6 +487,8 @@ export async function analyzeNpmPackageClient(
             // Only mark as suspiciousPackages, not infectedPackages
             // since the current latest version is clean
             suspiciousPackages: [packageNameToCheck],
+            // Add flag to indicate this package has infected history but current version is clean
+            hasInfectedHistory: true,
           },
         },
       };
@@ -345,6 +534,7 @@ export async function analyzeNpmPackageClient(
             authenticated: false,
             username: null,
             packageName: packageName,
+            detectedVersion: latestVersion, // For malware indicators case
             suspicious: true,
             suspiciousReasons: foundIndicators,
             malwareIndicators: foundIndicators,
@@ -366,6 +556,7 @@ export async function analyzeNpmPackageClient(
           authenticated: false,
           username: null,
           packageName: packageName,
+          detectedVersion: latestVersion, // Include the detected version
           suspicious: false,
         },
       },
