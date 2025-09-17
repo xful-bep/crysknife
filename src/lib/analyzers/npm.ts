@@ -45,9 +45,10 @@ export async function analyzeNpmAccount(
           ...createCleanCompromisedData(),
           modules: {
             npm: {
-              authenticated: true,
+              authenticated: false, // Only set to true if actual credentials are leaked
               username: username,
               suspiciousPackages: infectedPackages,
+              suspicious: true,
               infectedPackages: infectedPackages.map((pkg) => {
                 const infectedPkg = INFECTED_PACKAGE_MAP.get(pkg);
                 return {

@@ -257,7 +257,7 @@ export async function analyzeNpmAccountClient(
         ...createCleanCompromisedData(),
         modules: {
           npm: {
-            authenticated: true,
+            authenticated: false, // Only set to true if actual credentials are leaked
             username: username,
             suspiciousPackages: allFoundPackages, // All packages by the user
             infectedPackages: allInfectedPackages, // Only the infected ones
@@ -277,7 +277,7 @@ export async function analyzeNpmAccountClient(
       `Total infected packages detected: ${allInfectedPackages.length}`
     );
 
-    // If no infected packages but packages were found, show as potentially concerning for account searches
+    // If no infected packages but packages were found, show account info without marking as compromised
     if (allFoundPackages.length > 0) {
       console.log(
         `No infected packages found, but ${allFoundPackages.length} packages are associated with user ${username}`
@@ -286,13 +286,13 @@ export async function analyzeNpmAccountClient(
         ...createCleanCompromisedData(),
         modules: {
           npm: {
-            authenticated: true,
+            authenticated: false, // Don't mark as authenticated unless credentials are leaked
             username: username,
             suspiciousPackages: allFoundPackages,
             packageName: undefined,
-            suspicious: true,
+            suspicious: false, // Not suspicious if no infected packages found
             suspiciousReasons: [
-              `Found ${allFoundPackages.length} packages associated with this account. These should be reviewed for potential security concerns.`,
+              `Found ${allFoundPackages.length} packages associated with this account. All packages appear clean.`,
             ],
           },
         },

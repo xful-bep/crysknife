@@ -7,6 +7,7 @@ export const isSystemCompromised = (data: CompromisedData | null): boolean => {
     data.modules.github?.authenticated ||
     data.modules.npm?.authenticated ||
     data.modules.npm?.infectedPackages?.length ||
+    data.modules.npm?.malwareIndicators?.length ||
     data.modules.aws?.secrets?.length ||
     data.modules.gcp?.secrets?.length
   );
