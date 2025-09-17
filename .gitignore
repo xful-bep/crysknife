@@ -44,3 +44,4 @@ next-env.d.ts
 leaked-sample-users-data/
 # remove npm sample package data
 npm-api-sample-package-data/
+npm-api-sample-user-data/
