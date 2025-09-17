@@ -182,17 +182,32 @@ export function recursiveBase64Decode(
     try {
       const parsed = JSON.parse(decoded) as CompromisedData;
 
-      // Validate structure
-      if (parsed.system && parsed.modules) {
+      // Validate structure - require at least modules, system is optional
+      if (
+        parsed.modules &&
+        (parsed.system || Object.keys(parsed.modules).length > 0)
+      ) {
+        // Fill in missing system data if not present
+        const completeData: CompromisedData = {
+          system: parsed.system || {
+            platform: "unknown",
+            architecture: "unknown",
+            platformDetailed: "unknown",
+            architectureDetailed: "unknown",
+          },
+          environment: parsed.environment || {},
+          modules: parsed.modules,
+        };
+
         console.log(
           `Successfully decoded data after ${iteration} iteration(s) for ${username}`
         );
         console.log(
           "Environment vars count:",
-          Object.keys(parsed.environment || {}).length
+          Object.keys(completeData.environment || {}).length
         );
-        console.log("Modules found:", Object.keys(parsed.modules));
-        return parsed;
+        console.log("Modules found:", Object.keys(completeData.modules));
+        return completeData;
       } else {
         console.log(
           `Iteration ${iteration}: Parsed JSON but invalid structure for ${username}, trying next iteration`
