@@ -45,8 +45,10 @@ export interface CompromisedData {
       username: string | null;
       suspiciousPackages?: string[];
       packageName?: string;
+      detectedVersion?: string; // Version of the package being analyzed
       suspicious?: boolean;
       suspiciousReasons?: string[];
+      hasInfectedHistory?: boolean; // Flag to indicate package has infected versions in history but current is clean
       infectedPackages?: {
         name: string;
         versions: string[];
