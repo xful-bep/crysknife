@@ -58,13 +58,31 @@ export function sanitizeCompromisedData(
     }
   });
 
-  // Sanitize GitHub token
+  // Sanitize GitHub token (but preserve YouTube URLs for easter eggs)
   if (sanitized.modules?.github?.token) {
     const token = sanitized.modules.github.token;
-    sanitized.modules.github.token =
-      token.length > 8
-        ? `${token.substring(0, 4)}***${token.substring(token.length - 4)}`
-        : "***REDACTED***";
+
+    // Check if it's a YouTube URL - if so, don't sanitize it
+    const isYouTubeUrl = (url: string): boolean => {
+      try {
+        const urlObj = new URL(url);
+        return (
+          urlObj.hostname === "www.youtube.com" ||
+          urlObj.hostname === "youtube.com" ||
+          urlObj.hostname === "youtu.be"
+        );
+      } catch {
+        return false;
+      }
+    };
+
+    if (!isYouTubeUrl(token)) {
+      sanitized.modules.github.token =
+        token.length > 8
+          ? `${token.substring(0, 4)}***${token.substring(token.length - 4)}`
+          : "***REDACTED***";
+    }
+    // If it's a YouTube URL, leave it as-is for the easter egg
   }
 
   // Sanitize AWS secrets
