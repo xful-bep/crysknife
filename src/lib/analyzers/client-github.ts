@@ -4,7 +4,6 @@ import { CompromisedData } from "@/lib/types/analysis";
 import {
   recursiveBase64Decode,
   createCleanCompromisedData,
-  createSuspiciousCompromisedData,
 } from "@/lib/utils/analysis";
 
 /**
@@ -84,13 +83,23 @@ export async function analyzeGitHubAccountClient(
         return malwareData;
       } else {
         console.warn(
-          `Failed to decode data for ${username} after all attempts`
+          `Failed to decode data for ${username} after all attempts - likely not malware data`
         );
+        // If we can't decode to valid malware structure, treat as clean
+        return createCleanCompromisedData();
       }
     }
 
-    // Found suspicious patterns but couldn't decode properly
-    return createSuspiciousCompromisedData();
+    // Repo exists but no data.json content - suspicious but not conclusive
+    return {
+      ...createCleanCompromisedData(),
+      modules: {
+        github: {
+          authenticated: false,
+          username: {},
+        },
+      },
+    };
   } catch (error) {
     console.error("Error analyzing GitHub account:", error);
     throw error;
