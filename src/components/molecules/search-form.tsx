@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SearchTypeSelect, SearchInput } from "@/components/molecules";
 import { SearchButton } from "@/components/atoms";
 import { SearchType } from "@/lib/types";
@@ -9,11 +9,30 @@ import { getSearchTypePlaceholder } from "@/lib/utils/search-helpers";
 interface SearchFormProps {
   onSearch: (type: SearchType, query: string) => void;
   isLoading: boolean;
+  initialSearchType?: SearchType | null;
+  initialQuery?: string;
 }
 
-export function SearchForm({ onSearch, isLoading }: SearchFormProps) {
-  const [searchType, setSearchType] = useState<SearchType>("github-account");
-  const [searchQuery, setSearchQuery] = useState("");
+export function SearchForm({
+  onSearch,
+  isLoading,
+  initialSearchType,
+  initialQuery,
+}: SearchFormProps) {
+  const [searchType, setSearchType] = useState<SearchType>(
+    initialSearchType || "github-account"
+  );
+  const [searchQuery, setSearchQuery] = useState(initialQuery || "");
+
+  // Update state when initial props change
+  useEffect(() => {
+    if (initialSearchType) {
+      setSearchType(initialSearchType);
+    }
+    if (initialQuery !== undefined) {
+      setSearchQuery(initialQuery);
+    }
+  }, [initialSearchType, initialQuery]);
 
   const handleSearch = () => {
     if (!searchQuery.trim()) return;

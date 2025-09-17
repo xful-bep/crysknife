@@ -15,9 +15,16 @@ import { SearchType } from "@/lib/types";
 interface InputSourceProps {
   onSearch: (type: SearchType, query: string) => void;
   isLoading: boolean;
+  initialSearchType?: SearchType | null;
+  initialQuery?: string;
 }
 
-export function InputSource({ onSearch, isLoading }: InputSourceProps) {
+export function InputSource({
+  onSearch,
+  isLoading,
+  initialSearchType,
+  initialQuery,
+}: InputSourceProps) {
   const [activeTab, setActiveTab] = useState("search");
 
   const handleFileSelect = (content: string) => {
@@ -64,7 +71,12 @@ export function InputSource({ onSearch, isLoading }: InputSourceProps) {
               </TabsList>
 
               <TabsContent value="search" className="mt-6">
-                <SearchForm onSearch={onSearch} isLoading={isLoading} />
+                <SearchForm
+                  onSearch={onSearch}
+                  isLoading={isLoading}
+                  initialSearchType={initialSearchType}
+                  initialQuery={initialQuery}
+                />
               </TabsContent>
 
               <TabsContent value="upload" className="space-y-4 mt-6">
