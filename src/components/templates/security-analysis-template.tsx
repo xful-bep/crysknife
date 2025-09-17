@@ -26,30 +26,43 @@ export function SecurityAnalysisTemplate() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Function to update URL with search parameters
+  // Function to update URL with search parameters and create history entry
   const updateURL = useCallback(
-    (type: SearchType, query: string) => {
+    (type: SearchType, query: string, createHistoryEntry: boolean = true) => {
       const params = new URLSearchParams();
       params.set("search-type", type);
       params.set("query", query);
-      router.push(`/?${params.toString()}`, { scroll: false });
+      const newUrl = `/?${params.toString()}`;
+
+      if (createHistoryEntry) {
+        // Create a new history entry for browser back/forward navigation
+        router.push(newUrl);
+      } else {
+        // Replace current entry without creating history (for initial load)
+        router.replace(newUrl);
+      }
     },
     [router]
   );
 
   const handleSearch = useCallback(
-    async (type: SearchType, query: string) => {
+    async (
+      type: SearchType,
+      query: string,
+      isFromURLChange: boolean = false
+    ) => {
       setIsLoading(true);
       setError(null);
       setResults(null);
       setCurrentSearchType(type);
       setCurrentSearchQuery(query);
 
-      // Update URL with new search parameters (only if not already in URL)
+      // Update URL with new search parameters
       const currentSearchType = searchParams.get("search-type");
       const currentQuery = searchParams.get("query");
       if (currentSearchType !== type || currentQuery !== query) {
-        updateURL(type, query);
+        // Don't create history entry if this search is triggered by URL change (back/forward)
+        updateURL(type, query, !isFromURLChange);
       }
 
       try {
@@ -106,11 +119,28 @@ export function SecurityAnalysisTemplate() {
     };
 
     const urlParams = parseURLParams();
-    if (urlParams && !isLoading && !results) {
-      // Only trigger search if we're not already loading and don't have results
-      handleSearch(urlParams.type, urlParams.query);
+    if (urlParams) {
+      // Check if this is different from current state
+      const isDifferentSearch =
+        urlParams.type !== currentSearchType ||
+        urlParams.query !== currentSearchQuery;
+
+      if (isDifferentSearch) {
+        // This is a URL change (possibly from back/forward navigation)
+        // Pass true to indicate this is from URL change
+        handleSearch(urlParams.type, urlParams.query, true);
+      }
     }
-  }, [searchParams, handleSearch, isLoading, results]);
+  }, [searchParams, currentSearchType, currentSearchQuery, handleSearch]);
+
+  // Wrapper function for user-initiated searches (from UI components)
+  const handleUserSearch = useCallback(
+    (type: SearchType, query: string) => {
+      // User-initiated searches should create history entries
+      handleSearch(type, query, false);
+    },
+    [handleSearch]
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex flex-col">
@@ -119,7 +149,7 @@ export function SecurityAnalysisTemplate() {
           <HeaderSection />
 
           <InputSource
-            onSearch={handleSearch}
+            onSearch={handleUserSearch}
             isLoading={isLoading}
             initialSearchType={currentSearchType}
             initialQuery={currentSearchQuery}
