@@ -146,7 +146,7 @@ export async function analyzeNpmPackageClient(
   console.log("Client-side analyzing NPM package:", packageName);
 
   try {
-    // First check if this is an infected package and parse name/version
+    // Parse package name and version if provided
     let packageNameToCheck = packageName;
     let versionToCheck: string | undefined;
 
@@ -165,43 +165,49 @@ export async function analyzeNpmPackageClient(
       versionToCheck = packageName.substring(lastAtIndex + 1);
     }
 
-    // Check infection status before making API call
-    const infectionCheck = isPackageInfected(
-      packageNameToCheck,
-      versionToCheck
-    );
+    // Remove "latest" version as we'll get it from NPM
+    if (versionToCheck === "latest") {
+      versionToCheck = undefined;
+    }
 
-    // If infected, return immediately without API call
-    if (infectionCheck.infected) {
-      const infectedPkg = INFECTED_PACKAGE_MAP.get(packageNameToCheck);
-      return {
-        system: {
-          platform: "npm",
-          architecture: "unknown",
-          platformDetailed: "npm-registry",
-          architectureDetailed: "unknown",
-        },
-        environment: {},
-        modules: {
-          npm: {
-            authenticated: false,
-            username: null,
-            packageName: packageName,
-            suspicious: true,
-            suspiciousReasons: [
-              `This package is part of a known security incident`,
-            ],
-            infectedPackages: [
-              {
-                name: packageNameToCheck,
-                versions: infectionCheck.infectedVersions || [],
-                detectedVersion: versionToCheck,
-                category: infectedPkg?.category || "unknown",
-              },
-            ],
+    // Only check specific version if one was provided (and not "latest")
+    if (versionToCheck) {
+      const infectionCheck = isPackageInfected(
+        packageNameToCheck,
+        versionToCheck
+      );
+
+      if (infectionCheck.infected) {
+        const infectedPkg = INFECTED_PACKAGE_MAP.get(packageNameToCheck);
+        return {
+          system: {
+            platform: "npm",
+            architecture: "unknown",
+            platformDetailed: "npm-registry",
+            architectureDetailed: "unknown",
           },
-        },
-      };
+          environment: {},
+          modules: {
+            npm: {
+              authenticated: false,
+              username: null,
+              packageName: packageName,
+              suspicious: true,
+              suspiciousReasons: [
+                `This package is part of a known security incident`,
+              ],
+              infectedPackages: [
+                {
+                  name: packageNameToCheck,
+                  versions: infectionCheck.infectedVersions || [],
+                  detectedVersion: versionToCheck,
+                  category: infectedPkg?.category || "unknown",
+                },
+              ],
+            },
+          },
+        };
+      }
     }
 
     // Use the package name without version for the API call
@@ -224,6 +230,80 @@ export async function analyzeNpmPackageClient(
     }
 
     const packageData = await response.json();
+
+    // Get the latest version from NPM response
+    const latestVersion = packageData["dist-tags"]?.latest;
+
+    // Check if the latest version is infected
+    const latestVersionCheck = isPackageInfected(
+      packageNameToCheck,
+      latestVersion
+    );
+
+    if (latestVersionCheck.infected) {
+      const infectedPkg = INFECTED_PACKAGE_MAP.get(packageNameToCheck);
+      return {
+        system: {
+          platform: "npm",
+          architecture: "unknown",
+          platformDetailed: "npm-registry",
+          architectureDetailed: "unknown",
+        },
+        environment: {},
+        modules: {
+          npm: {
+            authenticated: false,
+            username: null,
+            packageName: packageName,
+            suspicious: true,
+            suspiciousReasons: [
+              `This package is part of a known security incident (version ${latestVersion})`,
+            ],
+            infectedPackages: [
+              {
+                name: packageNameToCheck,
+                versions: latestVersionCheck.infectedVersions || [],
+                detectedVersion: latestVersion,
+                category: infectedPkg?.category || "unknown",
+              },
+            ],
+          },
+        },
+      };
+    }
+
+    // Check if the package has ANY infected versions (even if latest is clean)
+    const anyVersionCheck = isPackageInfected(packageNameToCheck);
+
+    if (anyVersionCheck.infected) {
+      return {
+        system: {
+          platform: "npm",
+          architecture: "unknown",
+          platformDetailed: "npm-registry",
+          architectureDetailed: "unknown",
+        },
+        environment: {},
+        modules: {
+          npm: {
+            authenticated: false,
+            username: null,
+            packageName: packageName,
+            suspicious: true,
+            suspiciousReasons: [
+              `⚠️ This package has compromised versions in its history: ${anyVersionCheck.infectedVersions?.join(
+                ", "
+              )}`,
+              `Latest version ${latestVersion} appears to be clean, but use with caution`,
+              `Consider using an alternative package to avoid potential security risks`,
+            ],
+            // Only mark as suspiciousPackages, not infectedPackages
+            // since the current latest version is clean
+            suspiciousPackages: [packageNameToCheck],
+          },
+        },
+      };
+    }
 
     // Check for malware indicators from the infected packages data
     const description = packageData.description?.toLowerCase() || "";

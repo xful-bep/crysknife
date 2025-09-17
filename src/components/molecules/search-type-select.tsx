@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Package, Globe } from "lucide-react";
+import { Users, Package } from "lucide-react";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import {
   Select,
