@@ -40,7 +40,40 @@ export function AnalysisResults({
       case "npm-account":
         return `NPM account: ${searchQuery}`;
       case "npm-package":
-        return `NPM package: ${searchQuery}`;
+        // Use the processed package information from the analysis results
+        const npmModule = results.modules?.npm;
+
+        // Extract clean package name (remove any version from packageName field)
+        let cleanPackageName = npmModule?.packageName || searchQuery;
+
+        // If packageName contains a version, extract just the package name part
+        if (cleanPackageName.includes("@")) {
+          if (cleanPackageName.startsWith("@")) {
+            // Scoped package like @ctrl/package@version
+            const lastAtIndex = cleanPackageName.lastIndexOf("@");
+            if (lastAtIndex > 0) {
+              cleanPackageName = cleanPackageName.substring(0, lastAtIndex);
+            }
+          } else {
+            // Regular package like package@version
+            cleanPackageName = cleanPackageName.split("@")[0];
+          }
+        }
+
+        const versionText = npmModule?.detectedVersion
+          ? `@${npmModule.detectedVersion}`
+          : "";
+
+        // Check if this is the latest version by seeing if user didn't specify a version
+        // When user searches without version, we show latest, so add "(latest)" indicator
+        const userSpecifiedVersion =
+          searchQuery.includes("@") && !searchQuery.endsWith("@latest");
+        const latestIndicator =
+          !userSpecifiedVersion && npmModule?.detectedVersion
+            ? " (latest)"
+            : "";
+
+        return `NPM package: ${cleanPackageName}${versionText}${latestIndicator}`;
       case "package-json":
         return "Package.json analysis";
       case "file-upload":
@@ -51,6 +84,10 @@ export function AnalysisResults({
         return searchQuery;
     }
   };
+
+  // Check if this is a package with infected history but clean current version
+  const hasInfectedHistory = results.modules?.npm?.hasInfectedHistory || false;
+  const isPackageAnalysis = searchType === "npm-package";
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -79,6 +116,8 @@ export function AnalysisResults({
                     ? searchType === "npm-account"
                       ? "⚠️ POSSIBLY COMPROMISED"
                       : "⚠️ COMPROMISED DETECTED"
+                    : hasInfectedHistory && isPackageAnalysis
+                    ? "✅ No Threats Found (Current Version)"
                     : "✅ No Threats Found"}
                 </CardTitle>
                 <CardDescription>
@@ -94,6 +133,30 @@ export function AnalysisResults({
         <CardContent className="space-y-6">
           {/* System Information */}
           <SystemInfoCard system={results.system} />
+
+          {/* Special warning for packages with infected history but clean current version */}
+          {hasInfectedHistory && isPackageAnalysis && !isCompromised && (
+            <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
+              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+              <AlertDescription>
+                <div className="space-y-2">
+                  <div className="font-semibold text-yellow-800 dark:text-yellow-200">
+                    ⚠️ Package Security Advisory
+                  </div>
+                  <div className="text-sm text-yellow-700 dark:text-yellow-300">
+                    While the current version appears clean, this package has a
+                    history of security incidents. Consider using alternative
+                    packages with better security track records.
+                  </div>
+                  <div className="text-xs text-yellow-600 dark:text-yellow-400">
+                    <strong>Recommendation:</strong> Monitor this package for
+                    security updates and consider migrating to a more secure
+                    alternative when possible.
+                  </div>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Compromised Modules */}
           <ModuleAnalysis modules={results.modules} searchType={searchType} />
